@@ -30,8 +30,14 @@ public class PostController {
     @PostMapping("/api/posts")
     public ResponseEntity<Post> createPost(@RequestHeader("Authorization") String jwt, @RequestBody Post post) throws Exception {
         User reqUser = userService.findUserByJwt(jwt);
-        System.out.println("reqUser: " + reqUser);
         Post newPost = postService.createPost(post, reqUser.getId());
+        return new ResponseEntity<>(newPost, HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/api/posts/read")
+    public ResponseEntity<Post> readPost(@RequestHeader("Authorization") String jwt, @RequestBody Post post) throws Exception {
+        User reqUser = userService.findUserByJwt(jwt);
+        Post newPost = postService.readPost(post, reqUser.getId());
         return new ResponseEntity<>(newPost, HttpStatus.ACCEPTED);
     }
 

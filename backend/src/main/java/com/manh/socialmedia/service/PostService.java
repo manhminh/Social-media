@@ -11,6 +11,9 @@ public interface PostService {
     public List<Post> getAllPost();
     public Post createPost(Post post, Integer userId) throws PostException, UserException;
 
+    public Post readPost(Post post, Integer userId) throws PostException, UserException;
+
+
     public String deletePost(Integer postId, Integer userId) throws PostException, UserException;
 
     public List<Post> findPostByUserId(Integer userId);

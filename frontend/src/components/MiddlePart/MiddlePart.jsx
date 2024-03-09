@@ -6,24 +6,68 @@ import ImageIcon from "@mui/icons-material/Image";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import ArticleIcon from "@mui/icons-material/Article";
 import PostCard from "../Post/PostCard";
+import SockJS from "sockjs-client";
+import Stomp from "stompjs";
 import CreatePostModal from "../CreatePost/CreatePostModal";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllPostAction } from "../../redux/post/post.action";
+import {
+  getAllPostAction,
+  updatePostsAction,
+} from "../../redux/post/post.action";
+import { toast } from "react-toastify";
 
 const MiddlePart = () => {
   const story = [1, 1, 1, 1, 1];
+  const [stompClient, setStompClient] = useState(null);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
+  const post = useSelector((state) => state.post);
 
   const dispatch = useDispatch();
 
-  const post = useSelector((state) => state.post);
+  useEffect(() => {
+    const sock = new SockJS("http://localhost:8081/ws");
+    const stomp = Stomp.over(sock);
 
-  let { posts } = post;
+    stomp.connect({}, () => {
+      console.log("Connected to WebSocket");
+      stomp.subscribe("/user/1/topic", (message) => {
+        console.log("Received message:", JSON.parse(message.body));
+        let receivedMessage = JSON.parse(message.body);
+        if (message) {
+          toast.success(
+            receivedMessage.user?.firstName +
+              " " +
+              receivedMessage.user?.lastName +
+              " " +
+              "have a new post"
+          );
+        }
+        // dispatch(updatePostsAction(JSON.parse(message.body)));
+      });
+    });
+    setStompClient(stomp);
+
+    return () => {
+      stomp.disconnect();
+    };
+  }, []); // Empty dependency array to ensure it runs only once
+
+  console.log(post.posts);
+
+  const sendMessageToServer = (newMessage) => {
+    if (stompClient && newMessage) {
+      if (stompClient.connected) {
+        // Ensure the connection is established before sending
+        stompClient.send("/app/post/1", {}, JSON.stringify(newMessage));
+      } else {
+        console.log("WebSocket connection not established yet.");
+      }
+    }
+  };
 
   useEffect(() => {
     dispatch(getAllPostAction());
-  }, [post.newComment]);
-
-  const [openCreateModal, setOpenCreateModal] = useState(false);
+  }, [post.newComment, post.post]);
 
   const handleClose = () => {
     setOpenCreateModal(false);
@@ -86,13 +130,17 @@ const MiddlePart = () => {
       </Card>
 
       <div className="my-10 space-y-10">
-        {posts.map((item, index) => (
+        {post.posts.map((item, index) => (
           <PostCard key={index + 1} post={item} />
         ))}
       </div>
 
       <div>
-        <CreatePostModal open={openCreateModal} handleClose={handleClose} />
+        <CreatePostModal
+          open={openCreateModal}
+          handleClose={handleClose}
+          sendMessageToServer={sendMessageToServer}
+        />
       </div>
     </div>
   );

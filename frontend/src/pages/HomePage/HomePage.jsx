@@ -12,7 +12,8 @@ import { useEffect } from "react";
 
 const HomePage = () => {
   const location = useLocation();
-
+  const auth = useSelector((state) => state.auth);
+  console.log(auth);
   return (
     <div className="px-20">
       <Grid container spacing={0}>

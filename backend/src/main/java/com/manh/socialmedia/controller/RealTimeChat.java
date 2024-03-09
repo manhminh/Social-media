@@ -7,7 +7,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RestController;
 
 @Controller
 public class RealTimeChat {
@@ -21,9 +20,10 @@ public class RealTimeChat {
         return message;
     }
 
-    @MessageMapping("/post")
-    public Message sendPost(@Payload Message message) {
-        simpMessagingTemplate.convertAndSend("/private", message);
+    @MessageMapping("/post/{userId}")
+    public Message sendPost(@Payload Message message, @DestinationVariable String userId) {
+        System.out.println(userId);
+        simpMessagingTemplate.convertAndSendToUser(userId,"/topic", message);
         System.out.println(message);
         return message;
     }

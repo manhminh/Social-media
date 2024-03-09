@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { useFormik } from "formik";
@@ -11,13 +11,10 @@ import {
 } from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
-import { useState } from "react";
-import { uploadToCloudinary } from "../../utils/uploadToCloudnary";
+import CloseIcon from "@mui/icons-material/Close";
 import { useDispatch, useSelector } from "react-redux";
 import { createPostAction } from "../../redux/post/post.action";
-import CloseIcon from "@mui/icons-material/Close";
-import SockJS from "sockjs-client";
-import Stomp from "stompjs";
+import { uploadToCloudinary } from "../../utils/uploadToCloudnary";
 
 const style = {
   position: "absolute",
@@ -31,14 +28,15 @@ const style = {
   outline: "none",
 };
 
-const CreatePostModal = ({ open, handleClose }) => {
+const CreatePostModal = ({ open, handleClose, sendMessageToServer }) => {
   const dispatch = useDispatch();
-
-  const auth = useSelector((state) => state.auth);
+  const post = useSelector((state) => state.post);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: { caption: "", image: "", video: "" },
-
     onSubmit: (values) => {
       dispatch(createPostAction({ postData: values, sendMessageToServer }));
       handleClose();
@@ -46,67 +44,6 @@ const CreatePostModal = ({ open, handleClose }) => {
       setSelectedVideo("");
     },
   });
-
-  const [stompClient, setStompClient] = useState(null);
-  const [subscription, setSubscription] = useState(null);
-
-  React.useEffect(() => {
-    const sock = new SockJS("http://localhost:8081/ws");
-    const stomp = Stomp.over(sock);
-    setStompClient(stomp);
-
-    stomp.connect({}, onConnect, onErr);
-
-    return () => {
-      stomp.disconnect();
-    };
-  }, []);
-
-  const onConnect = () => {
-    console.log("WebSocket connected...");
-    if (stompClient && auth.user) {
-      const subscription = stompClient.subscribe(
-        `/post/private`,
-        onMessageReceive
-      );
-
-      // Store subscription for cleanup
-      setSubscription(subscription);
-    }
-  };
-
-  const onErr = (err) => {
-    console.log("WebSocket error: ", err);
-  };
-
-  // Function to handle received messages
-  const onMessageReceive = (payload) => {
-    const decodedPayload = atob(JSON.parse(payload.body).payload);
-    const receivedMessage = JSON.parse(decodedPayload);
-    console.log("Message received from WebSocket: ", receivedMessage);
-  };
-
-  // Clean up subscription when component unmounts
-  React.useEffect(() => {
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, [subscription]);
-
-  const sendMessageToServer = (newMessage) => {
-    if (stompClient && newMessage) {
-      stompClient.send(`/app/post`, {}, JSON.stringify(newMessage));
-    }
-
-    console.log(newMessage);
-  };
-
-  const [selectedImage, setSelectedImage] = useState();
-  const [selectedVideo, setSelectedVideo] = useState();
-
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectImage = async (event) => {
     setIsLoading(true);
@@ -134,18 +71,15 @@ const CreatePostModal = ({ open, handleClose }) => {
         <Box sx={style}>
           <form onSubmit={formik.handleSubmit}>
             <div>
-              <div>
-                <div className="flex justify-between">
-                  <Avatar className="flex space-x-4 items-center" />
-
-                  <IconButton onClick={handleClose}>
-                    <CloseIcon />
-                  </IconButton>
-                </div>
-                <div className="mt-3">
-                  <p className="font-bold text-lg">Minh Manh</p>
-                  <p className="text-sm">@manhminh</p>
-                </div>
+              <div className="flex justify-between">
+                <Avatar className="flex space-x-4 items-center" />
+                <IconButton onClick={handleClose}>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div className="mt-3">
+                <p className="font-bold text-lg">Minh Manh</p>
+                <p className="text-sm">@manhminh</p>
               </div>
               <textarea
                 placeholder="write caption..."
@@ -156,7 +90,6 @@ const CreatePostModal = ({ open, handleClose }) => {
                 rows="4"
                 className="outline-none w-full mt-5 p-2 bg-transparent border border-[#3b4054]"
               ></textarea>
-
               <div className="flex space-x-5 items-center">
                 <div>
                   <input
@@ -173,7 +106,6 @@ const CreatePostModal = ({ open, handleClose }) => {
                   </label>
                   <span>Image</span>
                 </div>
-
                 <div>
                   <input
                     type="file"
@@ -190,19 +122,16 @@ const CreatePostModal = ({ open, handleClose }) => {
                   <span>Video</span>
                 </div>
               </div>
-
               {selectedImage && (
                 <div>
                   <img src={selectedImage} className="h-[10rem]" alt="" />
                 </div>
               )}
-
               {selectedVideo && (
                 <div>
                   <video src={selectedVideo} className="h-[10rem]" alt="" />
                 </div>
               )}
-
               <div className="flex flex-end w-full pt-5">
                 <Button
                   variant="contained"
@@ -214,7 +143,6 @@ const CreatePostModal = ({ open, handleClose }) => {
               </div>
             </div>
           </form>
-
           <Backdrop
             sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
             open={isLoading}

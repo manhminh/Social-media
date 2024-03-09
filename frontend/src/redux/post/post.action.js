@@ -32,6 +32,20 @@ export const createPostAction = (reqData) => async (dispatch) => {
   }
 };
 
+export const updatePostsAction = (postData) => async (dispatch) => {
+  dispatch({ type: CREATE_POST_REQUEST });
+
+  try {
+    const { data } = await api.post(`/api/posts`, postData);
+
+    console.log("create post success: ", data);
+    dispatch({ type: CREATE_POST_SUCCESS, payload: data });
+  } catch (error) {
+    console.log("error: ", error);
+    dispatch({ type: CREATE_POST_FAILURE, payload: error });
+  }
+};
+
 export const getAllPostAction = () => async (dispatch) => {
   dispatch({ type: GET_ALL_POST_REQUEST });
 

@@ -35,10 +35,11 @@ public class PostServiceImplementaion implements PostService {
     }
 
     @Override
-        public Post createPost(Post post, Integer userId) throws UserException {
+    public Post createPost(Post post, Integer userId) throws UserException {
         User user = userService.findUserById(userId);
 
         Post newPost = new Post();
+        newPost.setId(post.getId());
         newPost.setCaption(post.getCaption());
         newPost.setImage(post.getImage());
         newPost.setVideo(post.getVideo());
@@ -47,6 +48,21 @@ public class PostServiceImplementaion implements PostService {
 
         Post savedPost = postRepository.save(newPost);
         return savedPost;
+    }
+
+    @Override
+    public Post readPost(Post post, Integer userId) throws PostException, UserException {
+        User user = userService.findUserById(userId);
+
+        Post newPost = new Post();
+        newPost.setId(post.getId());
+        newPost.setCaption(post.getCaption());
+        newPost.setImage(post.getImage());
+        newPost.setVideo(post.getVideo());
+        newPost.setUser(user);
+        newPost.setCreateAt(LocalDateTime.now());
+
+        return newPost;
     }
 
     @Override

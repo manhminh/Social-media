@@ -71,14 +71,14 @@ const Message = () => {
     console.log("WebSocket error: ", err);
   };
 
-  console.log(stompClient);
-
   useEffect(() => {
     if (stompClient && auth.user && currentChat) {
       const subscription = stompClient.subscribe(
         `/user/${currentChat.id}/private`,
         onMessageReceive
       );
+
+      console.log(subscription);
 
       return () => {
         subscription.unsubscribe();
@@ -249,12 +249,12 @@ const Message = () => {
         </Grid>
       </Grid>
 
-      <Backdrop
+      {/* <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={isLoading}
       >
-        <CircularProgress color="inherit" />
-      </Backdrop>
+        <CircularProgress color="#fff" />
+      </Backdrop> */}
     </div>
   );
 };

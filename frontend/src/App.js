@@ -8,6 +8,8 @@ import { useEffect } from "react";
 import { getProfileAction } from "./redux/auth/auth.action";
 import { ThemeProvider } from "@emotion/react";
 import { darkTheme } from "./themes/DarkTheme";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const auth = useSelector((state) => state.auth);
@@ -30,6 +32,7 @@ function App() {
         <Route path="/message" element={<Message />} />
         <Route path="/*" element={<Authentication />} />
       </Routes>
+      <ToastContainer />
     </ThemeProvider>
   );
 }
